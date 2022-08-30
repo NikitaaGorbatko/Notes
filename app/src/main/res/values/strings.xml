@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Notes</string>
+
+    <string-array name="months">
+        <item name="january">Январь</item>
+        <item name="february">Февраль</item>
+        <item name="march">Март</item>
+        <item name="april">Апрель</item>
+        <item name="may">Май</item>
+        <item name="june">Июнь</item>
+        <item name="jule">Июль</item>
+        <item name="august">Август</item>
+        <item name="september">Сентябрь</item>
+        <item name="october">Октябрь</item>
+        <item name="november">Ноябрь</item>
+        <item name="december">Декабрь</item>
+    </string-array>
+</resources>
