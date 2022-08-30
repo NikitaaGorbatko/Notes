@@ -27,6 +27,7 @@ fun CalendarFragment(
     //val distributedItemsCopy = distributedItems.toMutableList()
     val months = stringArrayResource(R.array.months)
     CalendarProvider.setMonth(monthNum)
+    val days = stringArrayResource(R.array.days)
 
     val month = months[CalendarProvider.monthNum]
     var counter = 1
@@ -42,115 +43,10 @@ fun CalendarFragment(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround
         ) {
-            Day("ПН", style = Style.BODY2)
-            Day("ВТ", style = Style.BODY2)
-            Day("СР", style = Style.BODY2)
-            Day("ЧТ", style = Style.BODY2)
-            Day("ПТ", style = Style.BODY2)
-            Day("СБ", style = Style.BODY2)
-            Day("ВС", style = Style.BODY2)
+            for (day in days) {
+                Day(day, style = Style.BODY2)
+            }
         }
-//        Row(
-//            modifier = Modifier.fillMaxWidth(),
-//            horizontalArrangement = Arrangement.SpaceAround
-//        ) {
-//            for (i in 1..7) {
-//                if (i >= CalendarProvider.firstDayOfFirstWeek) {
-//                    Day(
-//                        num = "${counter++}",
-//                        clicked = clickedDay == counter - 1,
-//                        clickable = true,
-//                        onClick = { onDayClick(it) }
-//                    )
-//                } else {
-//                    Day()
-//                }
-//            }
-//        }
-//        Row(
-//            modifier = Modifier.fillMaxWidth(),
-//            horizontalArrangement = Arrangement.SpaceAround
-//        ) {
-//            for (i in 1..7) {
-//                Day(
-//                    num = "${counter++}",
-//                    clicked = clickedDay == counter - 1,
-//                    clickable = true,
-//                    onClick = { onDayClick(it) }
-//                )
-//            }
-//        }
-//        Row(
-//            modifier = Modifier.fillMaxWidth(),
-//            horizontalArrangement = Arrangement.SpaceAround
-//        ) {
-//            for (i in 1..7) {
-//                Day(
-//                    num = "${counter++}",
-//                    clicked = clickedDay == counter - 1,
-//                    clickable = true,
-//                    onClick = { onDayClick(it) }
-//                )
-//            }
-//        }
-//        Row(
-//            modifier = Modifier.fillMaxWidth(),
-//            horizontalArrangement = Arrangement.SpaceAround
-//        ) {
-//            for (i in 1..7) {
-//                if (counter <= CalendarProvider.days) {
-//                    Day(
-//                        num = "${counter++}",
-//                        clicked = clickedDay == counter - 1,
-//                        clickable = true,
-//                        onClick = { onDayClick(it) }
-//                    )
-//                } else {
-//                    Day()
-//                }
-//            }
-//        }
-//        Row(
-//            modifier = Modifier.fillMaxWidth(),
-//            horizontalArrangement = Arrangement.SpaceAround
-//        ) {
-//            for (i in 1..7) {
-//                if (counter <= CalendarProvider.days) {
-//                    Day(
-//                        num = "${counter++}",
-//                        clicked = clickedDay == counter - 1,
-//                        clickable = true,
-//                        onClick = { onDayClick(it) }
-//                    )
-//                } else {
-//                    Day()
-//                }
-//            }
-//        }
-//        Row(
-//            modifier = Modifier.fillMaxWidth(),
-//            horizontalArrangement = Arrangement.SpaceAround
-//        ) {
-//            for (i in 1..7) {
-//                if (counter <= CalendarProvider.days) {
-//                    Day(
-//                        num = "${counter++}",
-//                        clicked = clickedDay == counter - 1,
-//                        clickable = true,
-//                        onClick = { onDayClick(it) }
-//                    )
-//                } else {
-//                    Day()
-//                }
-//            }
-//        }
-//        Week(
-//            param_counter = counter,
-//            clickedDay = clickedDay,
-//            onNext = { counter += WEEK_LENGTH },
-//            onDayClick = { onDayClick(it)}
-//        )
-
         for (i in 1..6) {
             Week(
                 param_counter = counter,
@@ -164,6 +60,7 @@ fun CalendarFragment(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(bottom = 20.dp)
                 .paddingFrom(alignmentLine = FirstBaseline, 40.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {

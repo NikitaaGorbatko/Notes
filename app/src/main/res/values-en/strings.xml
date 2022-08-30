@@ -17,4 +17,14 @@
         <item name="november">November</item>
         <item name="december">December</item>
     </string-array>
+
+    <string-array name="days">
+        <item name="monday">MON</item>
+        <item name="tuesday">TUE</item>
+        <item name="wednesday">WED</item>
+        <item name="thursday">THU</item>
+        <item name="friday">FRI</item>
+        <item name="saturday">SAT</item>
+        <item name="sunday">SUN</item>
+    </string-array>
 </resources>
