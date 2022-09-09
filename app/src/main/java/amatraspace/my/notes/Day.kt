@@ -14,6 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -32,20 +34,21 @@ data class DateHolder(val day: Int, val month: Int, val year: Int) {
         val month = if (month < 10) "0${month}" else month
         return "$day.$month.$year"
     }
+
+
+    fun getMonthString(array: Array<String>) = array[month]
 }
 
 @Composable
 fun Day(
+    date: Int? = null,//date in dateHolder format
     num: String = "",
     style: Style = Style.BODY1,
     clickable: Boolean = false,
     onClick: (date: Int) -> Unit = { _ -> },
-    //list: List<DistributedItem> = listOf(),
     clicked: Boolean = false,
-    maxWidth: Dp = 0.dp,
 ) {
     val modifier = if (clickable) {
-        val date = DateHolder(num.toInt(), CalendarProvider.monthNum, CalendarProvider.year)
         Modifier
             .height(50.dp)
             .width(50.dp)
@@ -53,7 +56,7 @@ fun Day(
             .clip(RoundedCornerShape(10.dp))
             //.border(1.dp, Color.Black, RoundedCornerShape(10.dp))
             .background(if (clicked) Color.LightGray else Color.Unspecified)
-            .clickable { onClick(date.intDate) }
+            .clickable { onClick(date ?: 0) }
     } else {
         Modifier
             .height(50.dp)
@@ -88,8 +91,6 @@ fun Day(
                         .background(color = Color.DarkGray, shape = RoundedCornerShape(100))
                 )
             }
-
         }
-
     }
 }

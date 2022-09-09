@@ -1,37 +1,51 @@
 package amatraspace.my.notes
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.ArrowBack
 import androidx.compose.material.icons.twotone.ArrowForward
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.FirstBaseline
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.lerp
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.calculateCurrentOffsetForPage
+import com.google.accompanist.pager.rememberPagerState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
+import kotlin.math.absoluteValue
 
-private val WEEK_LENGTH = 7
-
+@ExperimentalPagerApi
+@ExperimentalMaterialApi
 @Composable
 fun CalendarFragment(
-    year: Int,
-    monthNum: Int,
+    calendarProvider: CalendarProvider,
     onArrowClick: (b: Boolean) -> Unit,
     clickedDay: Int,
     onDayClick: (date: Int) -> Unit,
-    //distributedItems: List<DistributedItem>,
 ) {
-    //val distributedItemsCopy = distributedItems.toMutableList()
+    var pagerState = rememberPagerState()
+//    LaunchedEffect(pagerState) {
+//        pagerState.scrollToPage(12, pageOffset = 0f)
+//
+//    }
     val months = stringArrayResource(R.array.months)
-    CalendarProvider.setMonth(monthNum)
     val days = stringArrayResource(R.array.days)
+    val monthCalendarProviders = mutableListOf<CalendarProvider>()
+    for (i in 1..12) {
+        monthCalendarProviders.add(CalendarProvider(i))
+    }
 
-    val month = months[CalendarProvider.monthNum]
-    var counter = 1
-    var firstWeek = true
+    val monthName = months[calendarProvider.monthNum]
+
+
 
     Column(
         modifier = Modifier
@@ -39,23 +53,61 @@ fun CalendarFragment(
             .padding(bottom = 40.dp, top = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-            for (day in days) {
-                Day(day, style = Style.BODY2)
+        HorizontalPager(count = 12, state = pagerState) { page ->
+            Column(Modifier
+                .graphicsLayer {
+                    // Calculate the absolute offset for the current page from the
+                    // scroll position. We use the absolute value which allows us to mirror
+                    // any effects for both directions
+                    val pageOffset = calculateCurrentOffsetForPage(page).absoluteValue
+
+                    // We animate the scaleX + scaleY, between 85% and 100%
+                    lerp(
+                        start = 0.85f,
+                        stop = 1f,
+                        fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                    ).also { scale ->
+                        scaleX = scale
+                        scaleY = scale
+                    }
+
+                    // We animate the alpha, between 50% and 100%
+                    alpha = lerp(
+                        start = 0.5f,
+                        stop = 1f,
+                        fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                    )
+                }
+            ) {
+                var counter = 1
+                var firstWeek = true
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    for (day in days) {
+                        Day(num = day, style = Style.BODY2)
+                    }
+                }
+                for (i in 1..6) {
+                    Week(
+                        firstDayOfFirstWeek = monthCalendarProviders[page].firstDayOfFirstWeek,
+                        daysAmount = monthCalendarProviders[page].daysAmount,
+                        param_counter = counter,
+                        clickedDay = clickedDay,
+                        onNext = { counter = it },
+                        onDayClick = { onDayClick(it) },
+                        isFirstWeek = firstWeek
+                    )
+                    firstWeek = false
+                }
+//                Month(
+//                    calendarProvider = monthCalendarProviders[pagerState.currentPage],
+//                    clickedDay = clickedDay,
+//                    onDayClick = { onDayClick(it) },
+//                    days = days
+//                )
             }
-        }
-        for (i in 1..6) {
-            Week(
-                param_counter = counter,
-                clickedDay = clickedDay,
-                onNext = { counter = it },
-                onDayClick = { onDayClick(it)},
-                isFirstWeek = firstWeek
-            )
-            firstWeek = false
         }
         Row(
             modifier = Modifier
@@ -72,7 +124,7 @@ fun CalendarFragment(
             )
             Text(
                 modifier = Modifier.padding(top = 9.dp),
-                text = "$year $month",
+                text = "${calendarProvider.year} $monthName",
                 style = MaterialTheme.typography.h6,
             )
             IconButton(
@@ -83,11 +135,48 @@ fun CalendarFragment(
             )
         }
     }
-    counter = 1
+}
+
+
+@Composable
+private fun Month(
+    calendarProvider: CalendarProvider,
+    clickedDay: Int,
+    onDayClick: (date: Int) -> Unit,
+    days: Array<String>
+) {
+    Column() {
+        var counter = 1
+        var firstWeek = true
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceAround
+        ) {
+            for (day in days) {
+                Day(num = day, style = Style.BODY2)
+            }
+        }
+        for (i in 1..6) {
+            Week(
+                firstDayOfFirstWeek = calendarProvider.firstDayOfFirstWeek,
+                daysAmount = calendarProvider.daysAmount,
+                param_counter = counter,
+                clickedDay = clickedDay,
+                onNext = { counter = it },
+                onDayClick = { onDayClick(it) },
+                isFirstWeek = firstWeek
+            )
+            firstWeek = false
+        }
+    }
+
 }
 
 @Composable
 private fun Week(
+    //date: Int,
+    firstDayOfFirstWeek: Int,
+    daysAmount: Int,
     param_counter: Int,
     clickedDay: Int,
     onNext: (updatedCounter: Int) -> Unit,
@@ -100,7 +189,7 @@ private fun Week(
         horizontalArrangement = Arrangement.SpaceAround
     ) {
         for (i in 1..7) {
-            if (isFirstWeek && i >= CalendarProvider.firstDayOfFirstWeek || counter <= CalendarProvider.days && !isFirstWeek) {
+            if (isFirstWeek && i >= firstDayOfFirstWeek || counter <= daysAmount && !isFirstWeek) {
                 Day(
                     num = "${counter++}",
                     clicked = clickedDay == counter - 1,

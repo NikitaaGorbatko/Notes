@@ -1,63 +1,88 @@
 package amatraspace.my.notes
 
-import androidx.compose.foundation.Image
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.ExperimentalUnitApi
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.lerp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.calculateCurrentOffsetForPage
 import de.charlex.compose.BottomDrawerScaffold
 import de.charlex.compose.rememberBottomDrawerScaffoldState
+import kotlin.math.absoluteValue
+import kotlin.math.roundToInt
 
+@ExperimentalPagerApi
+@ExperimentalAnimationApi
+@ExperimentalUnitApi
 @ExperimentalMaterialApi
 @Composable
 fun MyScaffold() {
+    val calendar = CalendarProvider()
     val navController = rememberNavController()
     val topBarHeight = with(LocalDensity.current) { 56.dp.toPx() }
     val screens = listOf(Screen.Calendar, Screen.Month, Screen.Search, Screen.Account)
-    var clickedDay by remember { mutableStateOf(0) }
+    var clickedDate by remember { mutableStateOf(0) }
     var categoryName by remember { mutableStateOf("") }
     var categories by remember { mutableStateOf(listOf("Учеба", "Дом", "Работа", "Задачи")) }
     var isError by remember { mutableStateOf(false) }
-    var monthNum by remember { mutableStateOf(CalendarProvider.monthNum) }
+    //var monthNum by remember { mutableStateOf(calendarProvider.monthNum) }
+    var isDialogVisible by remember { mutableStateOf(false) }
+    var swipableState = rememberSwipeableState(initialValue = "On")
 
     BottomDrawerScaffold(
         scaffoldState = rememberBottomDrawerScaffoldState(drawerTopInset = topBarHeight.toInt()),
         content = {
-            NavHost(navController = navController, startDestination = "calendar") {
-                composable("calendar") {
-//                    CalendarFragment(
-//                        year = CalendarProvider.year,
-//                        monthNum = CalendarProvider.monthNum,
-//                        onArrowClick = {},
-//                        clickedDay = -1
-//                    )
+            if (isDialogVisible) {
+                DayDialog(dateHolder = DateHolder(clickedDate)) {
+                    isDialogVisible = false
                 }
-                composable("month") {
-                    MonthListFragment(DateHolder(20, 11, 2022))
-                }
-                composable("search") {  }
-                composable("account") {  }
             }
+
+//            Box(
+//                modifier = Modifier.fillMaxSize(),
+//                contentAlignment = Alignment.Center
+//            ) {
+//                SwipeableSample()
+//            }
+
+//            NavHost(navController = navController, startDestination = "calendar") {
+//                composable("calendar") {
+////                    CalendarFragment(
+////                        year = CalendarProvider.year,
+////                        monthNum = CalendarProvider.monthNum,
+////                        onArrowClick = {},
+////                        clickedDay = -1
+////                    )
+//                }
+//                composable("month") {
+//                    MonthListFragment(DateHolder(20, 11, 2022))
+//                }
+//                composable("search") {  }
+//                composable("account") {  }
+//            }
         },
         bottomBar = {
             BottomNavigation(elevation = 8.dp) {
@@ -202,7 +227,7 @@ fun MyScaffold() {
                 shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
                 elevation = 4.dp
             ) {
-                Column() {
+                Column {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -219,19 +244,22 @@ fun MyScaffold() {
                                 ),
                         )
                     }
+
                     CalendarFragment(
-                        year = CalendarProvider.year,
-                        monthNum = monthNum,
+                        calendarProvider = CalendarProvider(),
                         onArrowClick = {
                             if (it) {
-                                CalendarProvider.setMonth(++monthNum)
+                                //calendar.setMonth(++monthNum)
                             } else {
-                                CalendarProvider.setMonth(--monthNum)
+                                //calendar.setMonth(--monthNum)
                             }
-                            clickedDay = -1
+                            clickedDate = -1
                         },
-                        clickedDay = clickedDay,
-                        onDayClick = { clickedDay = DateHolder(it).day }
+                        clickedDay = clickedDate,
+                        onDayClick = {
+                            clickedDate = DateHolder(it).intDate
+                            isDialogVisible = true
+                        }
                     )
                 }
             }
@@ -239,74 +267,6 @@ fun MyScaffold() {
     )
 }
 
-//Column{
-//    Box(modifier = Modifier
-//        .fillMaxWidth()
-//        .height(25.dp)
-//    ) {
-//        Divider(
-//            Modifier
-//                .align(Alignment.Center)
-//                .height(3.dp)
-//                //.padding(top = 3.dp)
-//                .width(60.dp)
-//                .background(color = Color.Black)
-//        )
-//    }
-//    LazyColumn(
-//        modifier = Modifier
-//            //.verticalScroll(ScrollState(initial = 1)) // No remeber. We want the list always start at 0
-//            .fillMaxSize(),
-//    ) {
-//        item {
-//            Group(title = "Категории") {
-//                categories.forEach {
-//                    RowEntry(icon = Icons.Default.ShoppingCart, label = it)
-//                }
-//            }
-//        }
-//        item {
-//            Row(
-//                modifier = Modifier.padding(40.dp, 10.dp)
-//            ) {
-//                Column(modifier = Modifier.padding(bottom = 40.dp)) {
-//                    OutlinedTextField(
-//                        value = categoryName,
-//                        onValueChange = {
-//                            categoryName = it
-//                            isError = false
-//                        },
-//                        label = { Text("Название") },
-//                        isError = isError,
-//                    )
-//                    if (isError) {
-//                        Text(
-//                            text = "Короткое название",
-//                            color = MaterialTheme.colors.error,
-//                            style = MaterialTheme.typography.caption,
-//                            modifier = Modifier.padding(start = 16.dp)
-//                        )
-//                    }
-//                }
-//                Button(
-//                    modifier = Modifier.padding(start = 8.dp),
-//                    onClick = {
-//                        if (categoryName.length < 3) {
-//                            isError = true
-//                        } else {
-//                            categories = categories + categoryName
-//                            categoryName = ""
-//                        }
-//                    },
-//                    content = {  }
-//                )
-//            }
-//        }
-//        item {
-//            Spacer(modifier = Modifier.requiredHeight(136.dp))   //FIXME find a better solution
-//        }
-//    }
-//}
 
 
 
