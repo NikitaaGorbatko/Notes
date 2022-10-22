@@ -6,21 +6,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.ArrowBack
 import androidx.compose.material.icons.twotone.ArrowForward
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.FirstBaseline
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.lerp
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
-import com.google.accompanist.pager.calculateCurrentOffsetForPage
 import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.coroutineScope
-import kotlin.math.absoluteValue
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlin.coroutines.CoroutineContext
 
 @ExperimentalPagerApi
 @ExperimentalMaterialApi
@@ -28,7 +26,7 @@ import kotlin.math.absoluteValue
 fun CalendarFragment(
     calendarProvider: CalendarProvider,
     onArrowClick: (b: Boolean) -> Unit,
-    clickedDay: Int,
+    clickedDate: Int,
     onDayClick: (date: Int) -> Unit,
 ) {
     var pagerState = rememberPagerState()
@@ -36,103 +34,70 @@ fun CalendarFragment(
 //        pagerState.scrollToPage(12, pageOffset = 0f)
 //
 //    }
+    val coroutineScope = rememberCoroutineScope()
     val months = stringArrayResource(R.array.months)
     val days = stringArrayResource(R.array.days)
     val monthCalendarProviders = mutableListOf<CalendarProvider>()
-    for (i in 1..12) {
+    for (i in 1..120) {
         monthCalendarProviders.add(CalendarProvider(i))
     }
 
+
     val monthName = months[calendarProvider.monthNum]
 
-
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 40.dp, top = 20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        HorizontalPager(count = 12, state = pagerState) { page ->
-            Column(Modifier
-                .graphicsLayer {
-                    // Calculate the absolute offset for the current page from the
-                    // scroll position. We use the absolute value which allows us to mirror
-                    // any effects for both directions
-                    val pageOffset = calculateCurrentOffsetForPage(page).absoluteValue
-
-                    // We animate the scaleX + scaleY, between 85% and 100%
-                    lerp(
-                        start = 0.85f,
-                        stop = 1f,
-                        fraction = 1f - pageOffset.coerceIn(0f, 1f)
-                    ).also { scale ->
-                        scaleX = scale
-                        scaleY = scale
-                    }
-
-                    // We animate the alpha, between 50% and 100%
-                    alpha = lerp(
-                        start = 0.5f,
-                        stop = 1f,
-                        fraction = 1f - pageOffset.coerceIn(0f, 1f)
-                    )
-                }
-            ) {
-                var counter = 1
-                var firstWeek = true
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceAround
-                ) {
-                    for (day in days) {
-                        Day(num = day, style = Style.BODY2)
-                    }
-                }
-                for (i in 1..6) {
-                    Week(
-                        firstDayOfFirstWeek = monthCalendarProviders[page].firstDayOfFirstWeek,
-                        daysAmount = monthCalendarProviders[page].daysAmount,
-                        param_counter = counter,
-                        clickedDay = clickedDay,
-                        onNext = { counter = it },
-                        onDayClick = { onDayClick(it) },
-                        isFirstWeek = firstWeek
-                    )
-                    firstWeek = false
-                }
-//                Month(
-//                    calendarProvider = monthCalendarProviders[pagerState.currentPage],
-//                    clickedDay = clickedDay,
-//                    onDayClick = { onDayClick(it) },
-//                    days = days
-//                )
-            }
-        }
-        Row(
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 20.dp)
-                .paddingFrom(alignmentLine = FirstBaseline, 40.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+                .fillMaxSize()
+                .padding(bottom = 40.dp, top = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            IconButton(
-                onClick = {
-                    onArrowClick(false)
-                },
-                content = { Icon(Icons.TwoTone.ArrowBack, contentDescription = null) },
-            )
-            Text(
-                modifier = Modifier.padding(top = 9.dp),
-                text = "${calendarProvider.year} $monthName",
-                style = MaterialTheme.typography.h6,
-            )
-            IconButton(
-                onClick = {
-                    onArrowClick(true)
-                },
-                content = { Icon(Icons.TwoTone.ArrowForward, contentDescription = null) },
-            )
+            HorizontalPager(count = 120, state = pagerState) { page ->
+                Month(
+                    daysInPreviousMonth = monthCalendarProviders[page].daysAmount,
+                    calendarProvider = monthCalendarProviders[page + 1],
+                    clickedDate = clickedDate,
+                    onDayClick = { onDayClick(it) },
+                    days = days
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp)
+                    .paddingFrom(alignmentLine = FirstBaseline, 40.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                IconButton(
+                    onClick = {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(
+                                pagerState.currentPage - 1,
+                                pageOffset = 1f
+                            )
+                        }
+                        onArrowClick(false)
+                    },
+                    content = { Icon(Icons.TwoTone.ArrowBack, contentDescription = null) },
+                )
+                Text(
+                    modifier = Modifier.padding(top = 9.dp),
+                    text = "${calendarProvider.year} $monthName",
+                    style = MaterialTheme.typography.h6,
+                )
+                IconButton(
+                    onClick = {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(
+                                pagerState.currentPage + 1,
+                                pageOffset = 1f
+                            )
+                        }
+                        onArrowClick(true)
+                    },
+                    content = { Icon(Icons.TwoTone.ArrowForward, contentDescription = null) },
+                )
+            }
         }
     }
 }
@@ -140,14 +105,16 @@ fun CalendarFragment(
 
 @Composable
 private fun Month(
+    daysInPreviousMonth: Int,
     calendarProvider: CalendarProvider,
-    clickedDay: Int,
+    clickedDate: Int,
     onDayClick: (date: Int) -> Unit,
     days: Array<String>
 ) {
     Column() {
         var counter = 1
         var firstWeek = true
+        var wasLast = false
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround
@@ -157,47 +124,68 @@ private fun Month(
             }
         }
         for (i in 1..6) {
+            if (wasLast) {
+                break
+            }
             Week(
-                firstDayOfFirstWeek = calendarProvider.firstDayOfFirstWeek,
-                daysAmount = calendarProvider.daysAmount,
+                daysInPreviousMonth = daysInPreviousMonth,
+                calendarProvider = calendarProvider,
                 param_counter = counter,
-                clickedDay = clickedDay,
+                clickedDate = clickedDate,
                 onNext = { counter = it },
                 onDayClick = { onDayClick(it) },
-                isFirstWeek = firstWeek
+                isFirstWeek = firstWeek,
+                wasLast = { wasLast = true }
             )
             firstWeek = false
         }
     }
 
 }
+typealias DaysRow = MutableList<@Composable () -> Unit>
 
 @Composable
 private fun Week(
-    //date: Int,
-    firstDayOfFirstWeek: Int,
-    daysAmount: Int,
+    daysInPreviousMonth: Int,
+    calendarProvider: CalendarProvider,
     param_counter: Int,
-    clickedDay: Int,
+    clickedDate: Int,
     onNext: (updatedCounter: Int) -> Unit,
     onDayClick: (date: Int) -> Unit,
-    isFirstWeek: Boolean
+    isFirstWeek: Boolean,
+    wasLast: () -> Unit
 ) {
     var counter = param_counter
+    var nextMonthCounter = 1
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceAround
     ) {
         for (i in 1..7) {
-            if (isFirstWeek && i >= firstDayOfFirstWeek || counter <= daysAmount && !isFirstWeek) {
+            if (isFirstWeek && i >= calendarProvider.firstDayOfFirstWeek || counter <= calendarProvider.daysAmount && !isFirstWeek) {
                 Day(
                     num = "${counter++}",
-                    clicked = clickedDay == counter - 1,
+                    //clicked = false,//clickedDate == DateHolder(counter - 1, calendarProvider.monthNum, calendarProvider.year).intDate,
                     clickable = true,
-                    onClick = { onDayClick(it) }
+                    onClick = {
+                        onDayClick(
+                            DateHolder(
+                                day = it,
+                                month = calendarProvider.monthNum + 1,
+                                year = calendarProvider.year
+                            ).intDate
+                        )
+                    }
                 )
             } else {
-                Day()
+                if (isFirstWeek) {
+                    val day = daysInPreviousMonth - (calendarProvider.firstDayOfFirstWeek - 1) + i
+                    Day("$day")
+                } else {
+                    wasLast()
+                    Day("${nextMonthCounter++}")
+                }
+
             }
         }
         onNext(counter)

@@ -9,30 +9,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.ExperimentalUnitApi
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.lerp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.HorizontalPager
-import com.google.accompanist.pager.calculateCurrentOffsetForPage
 import de.charlex.compose.BottomDrawerScaffold
 import de.charlex.compose.rememberBottomDrawerScaffoldState
-import kotlin.math.absoluteValue
-import kotlin.math.roundToInt
 
 @ExperimentalPagerApi
 @ExperimentalAnimationApi
@@ -255,9 +244,9 @@ fun MyScaffold() {
                             }
                             clickedDate = -1
                         },
-                        clickedDay = clickedDate,
+                        clickedDate = clickedDate,
                         onDayClick = {
-                            clickedDate = DateHolder(it).intDate
+                            clickedDate = it
                             isDialogVisible = true
                         }
                     )

@@ -21,6 +21,9 @@ class CalendarProvider() {
     var firstDayOfFirstWeek = if (dayOfWeek == 1) 7 else dayOfWeek - 1
         private set
 
+    val intDate: Int
+        get() = year * 10000 + monthNum + 1 * 100 + day
+
 
     constructor(month_par: Int): this() {
         var swipedYear = year
